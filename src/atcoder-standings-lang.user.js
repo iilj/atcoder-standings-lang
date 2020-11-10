@@ -1,100 +1,109 @@
+// ==UserScript==
+// @name         atcoder-standings-lang
+// @namespace    iilj
+// @version      2020.11.10.0
+// @description  AtCoder の順位表に最多提出言語を追加します．uesugi6111 さん作のスクリプトが元ネタです．
+// @author       iilj
+// @supportURL   https://github.com/iilj/atcoder-standings-lang/issues
+// @match        https://atcoder.jp/contests/*/standings*
+// @require      https://img.atcoder.jp/public/d7328d0/js/lib/jquery-1.9.1.min.js
+// @require      https://img.atcoder.jp/public/d7328d0/js/lib/bootstrap.min.js
+// ==/UserScript==
 
+/* globals $ */
 
-async function aaa() {
+/**
+ * ユーザID/言語ごとの提出数
+ * @typedef {Object} UserLangEntry
+ * @property {string} user_id ユーザ ID
+ * @property {string} language 言語名
+ * @property {number} count 提出数
+ */
 
-    console.log('@kenkooooさんありがとう');
-    const res = await fetch("https://kenkoooo.com/atcoder/resources/lang.json", { cache: 'force-cache' });
-    const list = await res.json();
+(() => {
+    'use strict';
 
-    Array.prototype.forEach.call(document.querySelectorAll('.username'), function (u) {
-        if (!u.href.includes('/users/')) {
-            return;
-        }
-        const user_id = u.text;
+    /** @type {Map<string, UserLangEntry[]>} */
+    const userLangEntryMap = new Map();
 
-        const angArray = fcfc(list, user_id);
-        if (angArray.length === 0) {
-            return;
-        }
+    const fetchLangJson = async () => {
+        console.log('@kenkooooさんありがとう');
+        // 2e5 個くらい要素があるのでキャッシュする
+        const res = await fetch("https://kenkoooo.com/atcoder/resources/lang.json", { cache: 'force-cache' });
+        /** @type {UserLangEntry[]} */
+        const userLangEntries = await res.json();
 
-
-        const str_array = angArray.map((element) => {
-            return element['language'] + ' : ' + element['count'];
+        // prepare map
+        userLangEntries.forEach(userLangEntry => {
+            if (userLangEntryMap.has(userLangEntry.user_id)) {
+                userLangEntryMap.get(userLangEntry.user_id).push(userLangEntry);
+            } else {
+                userLangEntryMap.set(userLangEntry.user_id, [userLangEntry]);
+            }
         });
 
-        let lang = angArray[0]['language'];
+        // sort arrays
+        userLangEntryMap.forEach(userLangArray => {
+            userLangArray.sort((a, b) => b.count - a.count); // in place
+        });
+    };
 
-        const langSize = angArray.length;
+    /** @type {(anchor: HTMLAnchorElement) => void} */
+    const updateAnchor = (anchor) => {
+        if (!anchor.href.includes('/users/')) return;
 
-        let lang_str = '';
-        if (langSize >= 3) {
-            lang_str += '/' + angArray[2]['language'];
+        const user_id = anchor.text.trim();
+        if (!userLangEntryMap.has(user_id)) return;
+
+        const userLangArray = userLangEntryMap.get(user_id);
+
+        const tooltipHtml = userLangArray.map((userLangEntry) =>
+            `${userLangEntry.language} : ${userLangEntry.count}`
+        ).join('<br>');
+
+        let langHtml = userLangArray[0].language;
+        if (userLangArray.length >= 2) {
+            langHtml += '<span style="font-size: 10px;">'
+                + `/${userLangArray[1].language}`
+                + (userLangArray.length >= 3 ? `/${userLangArray[2].language}` : '')
+                + ' </span>';
         }
-        if (langSize >= 2) {
-            lang += '<span style="font-size: 10px;">' + '/' + angArray[1]['language'] + lang_str + ' </span>';
-        }
 
-        u.insertAdjacentHTML('beforeend', '/' + '<span data-toggle="tooltip" data-html="true" data-placement="right" style="font-size: 12px;" title="' + str_array.join('<br>') + '">' + lang + '</span>');
+        anchor.insertAdjacentHTML('beforeend',
+            '/'
+            + '<span data-toggle="tooltip" data-html="true" data-placement="right" style="font-size: 12px;" title="' + tooltipHtml + '">'
+            + langHtml
+            + '</span>');
         $('[data-toggle="tooltip"]').tooltip();
+    };
+
+    /** @type {(tbody: HTMLTableSectionElement) => void} */
+    const updateTable = (tbody) => {
+        tbody.querySelectorAll('.username').forEach(anchor => {
+            updateAnchor(anchor);
+        });
+    };
+
+    /** @type {HTMLTableSectionElement} */
+    let tbody = null;
+
+    const tableObserver = new MutationObserver(() => {
+        updateTable(tbody);
     });
-}
-
-function fcfc(list, user_id) {
-    const trim_user_id = user_id.trim();
-    const index = binary_search(list, trim_user_id);
-    return sequence_search(trim_user_id, list, index);
-
-
-}
-
-function binary_search(list, key) {
-
-    let left = -1;
-    let right = list.length;
-
-
-    while (right - left > 1) {
-        let mid = Math.floor(left + (right - left) / 2);
-
-        if (isOK(mid, key, list)) {
-            right = mid;
-        } else {
-            left = mid;
+    const parentObserver = new MutationObserver(async () => {
+        tbody = document.getElementById('standings-tbody');
+        if (tbody) {
+            parentObserver.disconnect();
+            await fetchLangJson();
+            updateTable(tbody);
+            tableObserver.observe(
+                tbody,
+                { childList: true }
+            )
         }
-    }
-
-
-    return right;
-}
-function isOK(index, key, list) {
-    if (list[index]['user_id'] >= key) {
-        return true;
-    }
-    return false;
-
-
-}
-function sequence_search(user_id, list, index) {
-
-    let array = new Array();
-    array = array.concat(search_one(user_id, list, index, 1));
-    array = array.concat(search_one(user_id, list, index - 1, -1));
-
-    array.sort((a, b) => b['count'] - a['count']);
-
-    return array;
-}
-function search_one(user_id, list, index, add) {
-    const array = new Array();
-    while (1) {
-        if (list[index]['user_id'] !== user_id) {
-            break;
-        }
-        array.push(list[index]);
-        index += add;
-    }
-
-    return array;
-}
-
-aaa();
+    });
+    parentObserver.observe(
+        document.getElementById('vue-standings'),
+        { childList: true, subtree: true }
+    );
+})();
