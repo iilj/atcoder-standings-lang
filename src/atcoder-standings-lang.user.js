@@ -6,8 +6,6 @@
 // @author       iilj
 // @supportURL   https://github.com/iilj/atcoder-standings-lang/issues
 // @match        https://atcoder.jp/contests/*/standings*
-// @require      https://img.atcoder.jp/public/d7328d0/js/lib/jquery-1.9.1.min.js
-// @require      https://img.atcoder.jp/public/d7328d0/js/lib/bootstrap.min.js
 // ==/UserScript==
 
 /* globals $ */
