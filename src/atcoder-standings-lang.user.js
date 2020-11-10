@@ -63,17 +63,17 @@
 
         let langHtml = userLangArray[0].language;
         if (userLangArray.length >= 2) {
-            langHtml += '<span style="font-size: 10px;">'
+            langHtml += '<div style="font-size:10px;display:inline;">'
                 + `/${userLangArray[1].language}`
                 + (userLangArray.length >= 3 ? `/${userLangArray[2].language}` : '')
-                + ' </span>';
+                + ' </div>';
         }
 
         anchor.insertAdjacentHTML('beforeend',
             '/'
-            + '<span data-toggle="tooltip" data-html="true" data-placement="right" style="font-size: 12px;" title="' + tooltipHtml + '">'
+            + '<div data-toggle="tooltip" data-html="true" data-placement="right" style="font-size:12px;display:inline;" title="' + tooltipHtml + '">'
             + langHtml
-            + '</span>');
+            + '</div>');
         $('[data-toggle="tooltip"]').tooltip();
     };
 
