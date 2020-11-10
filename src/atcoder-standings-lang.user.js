@@ -26,6 +26,7 @@
 
     const fetchLangJson = async () => {
         console.log('@kenkooooさんありがとう');
+        console.log('うえすぎさんありがとう');
         // 2e5 個くらい要素があるのでキャッシュする
         const res = await fetch("https://kenkoooo.com/atcoder/resources/lang.json", { cache: 'force-cache' });
         /** @type {UserLangEntry[]} */
