@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         atcoder-standings-lang
 // @namespace    iilj
-// @version      2020.11.10.0
+// @version      2020.11.12.0
 // @description  AtCoder の順位表に最多提出言語を追加します．uesugi6111 さん作のスクリプトが元ネタです．
 // @author       iilj
 // @supportURL   https://github.com/iilj/atcoder-standings-lang/issues
@@ -70,10 +70,10 @@
 
         anchor.insertAdjacentHTML('beforeend',
             '/'
-            + '<div data-toggle="tooltip" data-html="true" data-placement="right" style="font-size:12px;display:inline;" title="' + tooltipHtml + '">'
+            + '<div data-toggle="tooltip" data-html="true" data-placement="right" style="font-size:12px;display:inline;" title="'
+            + tooltipHtml + '">'
             + langHtml
             + '</div>');
-        $('[data-toggle="tooltip"]').tooltip();
     };
 
     /** @type {(tbody: HTMLTableSectionElement) => void} */
@@ -81,6 +81,7 @@
         tbody.querySelectorAll('.username').forEach(anchor => {
             updateAnchor(anchor);
         });
+        $('[data-toggle="tooltip"]').tooltip();
     };
 
     /** @type {HTMLTableSectionElement} */
